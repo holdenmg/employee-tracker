@@ -25,7 +25,7 @@ const db = mysql.createConnection(
 
 
 
-
+//////// ADD / UPDATE FUNCTIONS //////////////////
 
 
 
@@ -112,15 +112,15 @@ function addDepartment() {
     name: 'departmentName',
   }]).then((answers) => {
 
-  db.query('INSERT INTO department (name) VALUES(?)', answers.departmentName, (err, data) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Department Added!")
-      init();
-    }
+    db.query('INSERT INTO department (name) VALUES(?)', answers.departmentName, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("Department Added!")
+        init();
+      }
+    });
   });
-});
 };
 
 function addRole() {
@@ -131,78 +131,105 @@ function addRole() {
     } else {
       var departments = data.map(department => department.name);
     }
-  //questions
-  inquirer.prompt([{
-    type: 'input',
-    message: 'Enter role title:',
-    name: 'roleName',
-  },
-  {
-    type: 'input',
-    message: 'Enter salary:',
-    name: 'salary',
-  },
-  {
-    type: 'list',
-    message: 'Select department for this role:',
-    name: 'departmentName',
-    choices: departments
-  }
-]).then((answers) => {
-  //get id from department name recieved in prompt
-  db.query(`SELECT department.id FROM department WHERE department.name = ?;`, answers.departmentName, (err, data) => {
-    if (err) {
-      console.log(err);
-    } else {
-      var departmentID = data.map(department => department.id);
+    //questions
+    inquirer.prompt([{
+      type: 'input',
+      message: 'Enter role title:',
+      name: 'roleName',
+    },
+    {
+      type: 'input',
+      message: 'Enter salary:',
+      name: 'salary',
+    },
+    {
+      type: 'list',
+      message: 'Select department for this role:',
+      name: 'departmentName',
+      choices: departments
     }
-    //make new role based on answers
-  db.query('INSERT INTO role (title, salary, department_id) VALUES(?, ?, ?)', [answers.roleName, answers.salary, departmentID], (err, data) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Role Added!")
-      init();
-    }
+    ]).then((answers) => {
+      //get id from department name recieved in prompt
+      db.query(`SELECT department.id FROM department WHERE department.name = ?;`, answers.departmentName, (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          var departmentID = data.map(department => department.id);
+        }
+        //make new role based on answers
+        db.query('INSERT INTO role (title, salary, department_id) VALUES(?, ?, ?)', [answers.roleName, answers.salary, departmentID], (err, data) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Role Added!")
+            init();
+          }
+        });
+      })
+    })
   });
-})})});
 };
 
-
-function updateRole() {
+//updates the role of an employee
+function updateEmployee() {
   //get employee names
-  db.query('SELECT CONCAT (first_name," ", last_name)  FROM employee', (err, data) => {
+  db.query('SELECT id, CONCAT (first_name," ", last_name) AS name FROM employee', (err, data) => {
     if (err) {
       console.log(err);
     } else {
       var employeeNames = data.map(employee => employee.name);
     }
-//get role names
-db.query('SELECT title FROM role', (err, data) => {
-  if (err) {
-    console.log(err);
-  } else {
-    var roles = data.map(role => role.title);
-  }
-//questions
-inquirer.prompt([
-{
-  type: 'list',
-  message: 'Select employee to update:',
-  name: 'departmentName',
-  choices: departments
-},
-{
-  type: 'list',
-  message: 'Select new role:',
-  name: 'departmentName',
-  choices: departments
-}]).then((answers) => {
+    //get role names
+    db.query('SELECT title FROM role', (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        var roles = data.map(role => role.title);
+      }
+      //questions
+      inquirer.prompt([
+        {
+          type: 'list',
+          message: 'Select employee to update:',
+          name: 'employeeName',
+          choices: employeeNames
+        },
+        {
+          type: 'list',
+          message: 'Select new role:',
+          name: 'newRole',
+          choices: roles
+        }]).then((answers) => {
+          // get employee id from name chosen in prompts
+          db.query(`SELECT employee.id FROM employee WHERE CONCAT(employee.first_name," ",employee.last_name) = ?;`, answers.employeeName, (err, data) => {
+            if (err) {
+              console.log(err);
+            } else {
+              var employeeID = data.map(employee => employee.id);
+            }
+            //get role ID associated with role title selected in prompts
+            db.query(`SELECT role.id FROM role WHERE role.title = ?;`, answers.newRole, (err, data) => {
+              if (err) {
+                console.log(err);
+              } else {
+                var roleID = data.map(role => role.id);
+              }
+              //update employee
+              db.query(`UPDATE employee SET role_id = ? WHERE employee.id = ?;`, [roleID, employeeID], (err, data) => {
+                if (err) {
+                  console.log(err);
+                } else {
+                  console.log(answers.employeeName + " updated!")
+                  init();
+                }
 
+              })
+            })
+          })
+        })
+    })
+  })
 }
-//update role
-
-}
 
 
 
@@ -210,7 +237,10 @@ inquirer.prompt([
 
 
 
-//INQUIRER FUNCTIONS
+
+
+
+//VIEW FUNCTIONS
 function viewDepartment() {
   db.query('SELECT * FROM department', (err, results) => {
     if (err) {
@@ -243,10 +273,7 @@ function viewEmployee() {
     init()
   });
 }
-
-
-
-
+// asks what user wants to do and then calls appropriate function
 function init() {
   inquirer.prompt([{
     type: 'list',
@@ -282,5 +309,4 @@ function init() {
       }
     });
 }
-
 init()
