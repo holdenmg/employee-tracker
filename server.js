@@ -23,74 +23,118 @@ const db = mysql.createConnection(
   console.log(`Connected to the tracker_db database.`)
 );
 // GLOBAL ARRAY VARIABLES FOR PROMPT CHOICES
-const managers = db.query('SELECT CONCAT (m.first_name," ", m.last_name) AS manager FROM employee LEFT JOIN employee m ON employee.manager_id = m.id');
-const roles= db.query()
+
+
+
+
+
+  //function roleQuestion() {
+   // db.query('SELECT title FROM role', (err, data) => {
+      //if (err) {
+     //  console.log(err);
+    ////  } else {
+     //   var roles = data;
+     //   roleTitles = roles.map(role => role.title);
+     //   console.log(roleTitles);
+    //  }
+    //  return roleTitles;
+   // });
+   // return roleTitles;
+//  }
+
+  function addEmployee() {
+    db.query('SELECT CONCAT (m.first_name," ", m.last_name) AS manager FROM employee LEFT JOIN employee m ON employee.manager_id = m.id', (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        var managers = data;
+         var managerNames = managers.filter(manager => manager.manager !== null).map(manager => manager.manager);
+      }
+      db.query('SELECT title FROM role', (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          var roles = data;
+           var roleTitles = roles.map(role => role.title);
+        }
+        inquirer.prompt([{
+          type: 'input',
+          message: 'Enter employee first name',
+          name: 'firstName',
+        },
+        { 
+          type: 'input',
+          message: 'Enter employee last name',
+          name: 'firstName',},
+        {
+          type: 'input',
+          message: 'Enter employee first name',
+          name: 'firstName',
+        },
+        {
+          type: 'list',
+          message: 'Enter employee role',
+          name: 'role',
+          choices: roleTitles,
+        },
+        {
+          type: 'list',
+          message: 'Enter employee manager',
+          name: 'manager',
+          choices: managerNames,
+        }
+        ])
+      
+  })
+})}
+
+
+
+
+
+
+
+
+
 
 
 //INQUIRER FUNCTIONS
-function viewDepartment(){
-db.query('SELECT * FROM department', (err, results) => {
-  if (err) {
-    console.log(err);
+function viewDepartment() {
+  db.query('SELECT * FROM department', (err, results) => {
+    if (err) {
+      console.log(err);
+      init()
+    }
+    console.table(results);
     init()
-  }
-  console.table(results);
-  init()
-});
+  });
 }
 
-function viewRole(){
-db.query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id  ', (err, results) => {
-  if (err) {
-    console.log(err);
+function viewRole() {
+  db.query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id  ', (err, results) => {
+    if (err) {
+      console.log(err);
+      init()
+    }
+    console.table(results);
     init()
-  }
-  console.table(results);
-  init()
-});
+  });
 }
 
-function viewEmployee(){
-db.query('SELECT employee.id, employee.first_name, employee.last_name, role.title AS role, department.name AS department, role.salary, CONCAT (m.first_name," ", m.last_name) AS manager FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON department.id = role.department_id LEFT JOIN employee m ON employee.manager_id = m.id ', (err, results) => {
-  if (err) {
-    console.log(err);
+function viewEmployee() {
+  db.query('SELECT employee.id, employee.first_name, employee.last_name, role.title AS role, department.name AS department, role.salary, CONCAT (m.first_name," ", m.last_name) AS manager FROM employee INNER JOIN role ON employee.role_id = role.id INNER JOIN department ON department.id = role.department_id LEFT JOIN employee m ON employee.manager_id = m.id ', (err, results) => {
+    if (err) {
+      console.log(err);
+      init()
+    }
+    console.table(results);
     init()
-  }
-  console.table(results);
-    init()
-});
+  });
 }
 
-function addEmployee(){
-  inquirer.prompt([{
-    type: 'input',
-    message: 'Enter employee first name',
-    name: 'firstName',
-  },
-  {
-    type: 'input',
-    message: 'Enter employee first name',
-    name: 'firstName',
-  },
-  {
-    type: 'list',
-    message: 'Enter employee role',
-    name: 'role',
-    choices: roles,
-  },
-  {
-    type: 'list',
-    message: 'Enter employee manager',
-    name: 'manager',
-    choices: managers,
-  }
+//function addEmployee() {
 
 
-
-
-]
-
-}
 
 
 
@@ -105,7 +149,7 @@ function init() {
   }]
   )
     .then((answer) => {
-      if (answer.question === 'View All Employees'){
+      if (answer.question === 'View All Employees') {
         viewEmployee();
       }
       else if (answer.question === 'Add Employee') {
@@ -131,6 +175,5 @@ function init() {
       }
     });
 }
-console.log(managers);
-console.log(roles);
+
 init()
