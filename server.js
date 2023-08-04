@@ -275,6 +275,7 @@ function viewEmployee() {
 }
 // asks what user wants to do and then calls appropriate function
 function init() {
+  
   inquirer.prompt([{
     type: 'list',
     message: 'What do you want to do?',
@@ -305,8 +306,9 @@ function init() {
         addDepartment();
       }
       else {
-        console.log("Bye!");
+        console.log("Bye! (press CTRL C to exit)");
       }
     });
 }
+console.log("*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EMPLOYEE TRACKER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*");
 init()
